@@ -7,10 +7,16 @@
 # Global variable initilization
 SECONDS=0
 ZIPNAME="Gato+-$(date '+%Y%m%d-%H%M').zip"
-TC_DIR="/home/rk134/working/aospa/msm-5.4-gatotc/clang-17.0.3"
+TC_DIR="/home/rk134/working/aospa/tc/clang-18"
 AK3_DIR="AnyKernel3"
 DEFCONFIG="vendor/lahaina-qgki_defconfig"
-MAKE_PARAMS="O=out ARCH=arm64 CC='ccache clang' LLVM=1 LLVM_IAS=1"
+MAKE_PARAMS="O=out ARCH=arm64 CC=clang LLVM=1 LLVM_IAS=1"
+
+# Always bind ccache folder as this does not persist
+sudo mount --bind /home/rk134/.cache/ccache /home/rk134/ccache
+
+# CCache exports
+export USE_CCACHE=1 && export CCACHE_EXEC=/usr/bin/ccache && ccache -M 10G && export CCACHE_DIR=/home/rk134/ccache
 
 # Export $TC_DIR to path
 export PATH="$TC_DIR/bin:$PATH"
@@ -62,7 +68,7 @@ make $MAKE_PARAMS $DEFCONFIG
 ARCH=arm64 CC=clang LLVM=1 LLVM_IAS=1 scripts/kconfig/merge_config.sh -O out arch/arm64/configs/$DEFCONFIG arch/arm64/configs/vendor/oplus_yupik_QGKI.config
 
 echo -e "\nStarting compilation...\n"
-make -j$(nproc --all) $MAKE_PARAMS || exit $?
+export USE_CCACHE=1 && export CCACHE_EXEC=/usr/bin/ccache && ccache -M 10G && export CCACHE_DIR=/home/rk134/ccache && make -j$(nproc --all) $MAKE_PARAMS CC="ccache clang" || exit $?
 
 kernel="out/arch/arm64/boot/Image"
 
